@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+
+  <title>Dicee</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css?family=Indie+Flower|Lobster" rel="stylesheet">
+  
+</head>
+
+<body>
+
+  <div class="container">
+    <h1 id="header">Refresh Me</h1>
+
+    <div class="dice">
+      <p>Player 1</p>
+      <img class="img1" src="">
+    </div>
+
+    <div class="dice">
+      <p>Player 2</p>
+      <img class="img2" src="">
+    </div>
+
+  </div>
+
+  <!--script>
+
+    // window.addEventListener("load", (event) => {
+      var player1 = Math.floor((Math.random() * 6) + 1);
+    var player2 = Math.floor((Math.random() * 6) + 1);
+    
+    getImageValue(player1, player2);
+      
+      if (player1 < player2) {
+        document.getElementById("header").innerHTML = "Player 2 Win";
+      } else if (player1 > player2) {
+        document.getElementById("header").innerHTML = "Player 1 Win";
+      }
+      else {
+        document.getElementById("header").innerHTML = "DRAW";
+      }
+    // });
+
+    function getImageValue(player1ImgVal, player2ImgVal) {
+    var player1 = "images/dice" + player1ImgVal + ".png";
+    var player2 = "images/dice" + player2ImgVal + ".png";
+
+   
+    var player1src = document.getElementsByClassName("img1")[0];
+    var player2src = document.getElementsByClassName("img2")[0];
+
+    player1src.src = player1;
+    player2src.src = player2;
+}
+
+  </script-->
+
+  <script src="file.js" charset="utf-8"></script>
+</body>
+
+<footer>
+  
+</footer>
+
+</html>

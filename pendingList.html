@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Pending List</title>
+</head>
+
+<body>
+
+<div id="container"></div>
+
+<script>
+const MAX_RETRY = 3;
+
+// --------------------
+// STATE
+// --------------------
+let state = {
+  retryMap: {},
+  inProgressMap: {}
+};
+
+// --------------------
+// SAMPLE DATA
+// --------------------
+const tableData = [
+  { cif: "CIF001", acc: "A1", channel: "WEB", reason: "", date: "2026-01-01" },
+  { cif: "CIF002", acc: "A2", channel: "APP", reason: "", date: "2026-01-02" },
+  { cif: "CIF003", acc: "A3", channel: "WEB", reason: "", date: "2026-01-03" }
+];
+
+// --------------------
+// RENDER TABLE
+// --------------------
+function renderTable() {
+  const container = document.getElementById("container");
+
+  container.innerHTML = `
+    <table border="1" cellpadding="10">
+      <thead>
+        <tr>
+          <th>CIF</th>
+          <th>ACC</th>
+          <th>Channel</th>
+          <th>Reason</th>
+          <th>Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableData.map(row => `
+          <tr>
+            <td>
+              <a
+                href="#"
+                id="link-${row.cif}"
+                onclick="onCifClick('${row.cif}'); return false;"
+              >
+                ${row.cif}
+              </a>
+            </td>
+            <td>${row.acc}</td>
+            <td>${row.channel}</td>
+            <td>${row.reason}</td>
+            <td>${row.date}</td>
+            <td id="status-${row.cif}"></td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+// --------------------
+// CLICK HANDLER
+// --------------------
+async function onCifClick(cif) {
+
+  // Prevent double click
+  if (state.inProgressMap[cif]) {
+    console.log("API already running:", cif);
+    return;
+  }
+
+  if (!state.retryMap[cif]) {
+    state.retryMap[cif] = 0;
+  }
+
+  state.inProgressMap[cif] = true;
+
+  disableLink(cif);
+
+  try {
+    await callApi(cif);
+  } finally {
+    state.inProgressMap[cif] = false;
+    enableLink(cif);
+  }
+}
+
+// --------------------
+// API CALL
+// --------------------
+async function callApi(cif) {
+
+  showLoading(cif);
+
+  try {
+
+    const res = await fetch(
+      `http://localhost:3000/api/pending-list?cif=${cif}`
+    );
+
+    if (!res.ok) {
+      throw new Error("HTTP Error " + res.status);
+    }
+
+    const result = await res.json();
+
+    if (result.status === "SUCCESS") {
+      redirect(result.data, cif);
+      return;
+    }
+
+    if (result.status === "EMPTY") {
+     // showEmpty(cif);
+
+     state.retryMap[cif]++;
+
+    if (state.retryMap[cif] < MAX_RETRY) {
+      showError(cif, "");
+    } else {
+      showFatal(cif, "");
+    }
+     
+      return;
+    }
+
+    throw new Error(result.error || "API Failure");
+
+  } catch (err) {
+
+    state.retryMap[cif]++;
+
+    if (state.retryMap[cif] < MAX_RETRY) {
+      showError(cif, err.message);
+    } else {
+      showFatal(cif, err.message);
+    }
+  }
+}
+
+// --------------------
+// RETRY
+// --------------------
+function retry(cif) {
+  onCifClick(cif);
+}
+
+// --------------------
+// LINK CONTROL
+// --------------------
+function disableLink(cif) {
+  const link = document.getElementById(`link-${cif}`);
+
+  if (link) {
+    link.style.pointerEvents = "none";
+    link.style.color = "gray";
+  }
+}
+
+function enableLink(cif) {
+  const link = document.getElementById(`link-${cif}`);
+
+  if (link) {
+    link.style.pointerEvents = "auto";
+    link.style.color = "blue";
+  }
+}
+
+// --------------------
+// UI STATES
+// --------------------
+function showLoading(cif) {
+  document.getElementById(`status-${cif}`).innerHTML =
+    `Loading...`;
+}
+
+function showEmpty(cif) {
+  document.getElementById(`status-${cif}`).innerHTML = `
+    No Data
+    <br/>
+    <button onclick="retry('${cif}')">Retry</button>
+  `;
+}
+
+function showError(cif, msg) {
+
+  const count = state.retryMap[cif];
+
+  document.getElementById(`status-${cif}`).innerHTML = `
+    <span style="color:red;">${msg}</span>
+    <br/>
+    <button onclick="retry('${cif}')">
+      Retry (${count}/${MAX_RETRY})
+    </button>
+  `;
+}
+
+function showFatal(cif, msg) {
+
+  document.getElementById(`status-${cif}`).innerHTML = `
+    <span style="color:red;">Max Retry Failed</span>
+    <br/>
+    ${msg}
+    <br/>
+    <button onclick="resetRow('${cif}')">Reset</button>
+  `;
+}
+
+// --------------------
+// RESET
+// --------------------
+function resetRow(cif) {
+  state.retryMap[cif] = 0;
+
+  document.getElementById(`status-${cif}`).innerHTML = "";
+}
+
+// --------------------
+// REDIRECT
+// --------------------
+function redirect(data, cif) {
+
+  sessionStorage.setItem("cif", cif);
+  sessionStorage.setItem("data", JSON.stringify(data));
+
+  window.location.href = "details.html";
+}
+
+// INIT
+renderTable();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Details</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f4f4;
+    }
+
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 700px;
+      margin: auto;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    h2 {
+      margin-top: 0;
+    }
+
+    pre {
+      background: #222;
+      color: #0f0;
+      padding: 15px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+
+    .error {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <div id="app"></div>
+</div>
+
+<script>
+  function loadDetails() {
+
+    const app = document.getElementById("app");
+
+    try {
+
+      const cif = sessionStorage.getItem("cif");
+      const rawData = sessionStorage.getItem("data");
+
+      // Validate session data
+      if (!cif || !rawData) {
+        app.innerHTML = `
+          <p class="error">
+            No data found in session storage.
+          </p>
+        `;
+        return;
+      }
+
+      const data = JSON.parse(rawData);
+
+      // Create elements safely
+      const title = document.createElement("h2");
+      title.textContent = "Details Page";
+
+      const cifText = document.createElement("p");
+      cifText.innerHTML = `<b>CIF:</b> ${cif}`;
+
+      const pre = document.createElement("pre");
+      pre.textContent = JSON.stringify(data, null, 2);
+
+      // Append
+      app.appendChild(title);
+      app.appendChild(cifText);
+      app.appendChild(pre);
+
+    } catch (error) {
+
+      console.error(error);
+
+      app.innerHTML = `
+        <p class="error">
+          Failed to load data.
+        </p>
+      `;
+    }
+  }
+
+  loadDetails();
+</script>
+
+</body>
+</html>
